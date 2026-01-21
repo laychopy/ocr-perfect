@@ -5,6 +5,8 @@ This program manages all Google Cloud resources for OCR Perfect:
 - Cloud Storage buckets (input/output)
 - Firestore database
 - Pub/Sub topics for job processing
+- Artifact Registry for Docker images
+- Cloud Run services (backend API, worker)
 - Service accounts and IAM
 - Required APIs
 
@@ -15,7 +17,7 @@ Usage:
 """
 
 import pulumi
-from pulumi_gcp import storage, firestore, pubsub, projects, serviceaccount
+from pulumi_gcp import storage, firestore, pubsub, projects, serviceaccount, artifactregistry, cloudrun
 
 # =============================================================================
 # Configuration
@@ -43,6 +45,7 @@ required_apis = [
     "identitytoolkit.googleapis.com",
     "iam.googleapis.com",
     "iamcredentials.googleapis.com",
+    "compute.googleapis.com",
 ]
 
 enabled_apis = {}
@@ -131,6 +134,21 @@ dlq_topic = pubsub.Topic(
 )
 
 # =============================================================================
+# Artifact Registry
+# =============================================================================
+
+# Docker repository for container images
+docker_repo = artifactregistry.Repository(
+    "docker-repo",
+    repository_id=project,
+    location=region,
+    format="DOCKER",
+    description="Docker images for OCR Perfect",
+    project=project,
+    opts=pulumi.ResourceOptions(depends_on=[enabled_apis["artifactregistry"]]),
+)
+
+# =============================================================================
 # Service Accounts
 # =============================================================================
 
@@ -193,6 +211,93 @@ worker_firestore_binding = projects.IAMMember(
     member=worker_sa.email.apply(lambda email: f"serviceAccount:{email}"),
 )
 
+# User permissions to act as service accounts (for deployment)
+deployer_email = config.get("deployer_email") or "softwarelaycho@gmail.com"
+
+backend_sa_user_binding = serviceaccount.IAMMember(
+    "backend-sa-user-binding",
+    service_account_id=backend_sa.name,
+    role="roles/iam.serviceAccountUser",
+    member=f"user:{deployer_email}",
+)
+
+worker_sa_user_binding = serviceaccount.IAMMember(
+    "worker-sa-user-binding",
+    service_account_id=worker_sa.name,
+    role="roles/iam.serviceAccountUser",
+    member=f"user:{deployer_email}",
+)
+
+# =============================================================================
+# Cloud Run Services
+# =============================================================================
+
+# Backend API Cloud Run Service
+# Note: Image must be built and pushed separately using Cloud Build
+# gcloud builds submit --tag {region}-docker.pkg.dev/{project}/{project}/backend:latest backend/
+backend_image = f"{region}-docker.pkg.dev/{project}/{project}/backend:v3"
+
+backend_service = cloudrun.Service(
+    "backend-service",
+    name="ocr-perfect-backend",
+    location=region,
+    project=project,
+    template=cloudrun.ServiceTemplateArgs(
+        spec=cloudrun.ServiceTemplateSpecArgs(
+            service_account_name=backend_sa.email,
+            containers=[
+                cloudrun.ServiceTemplateSpecContainerArgs(
+                    image=backend_image,
+                    ports=[cloudrun.ServiceTemplateSpecContainerPortArgs(container_port=8080)],
+                    envs=[
+                        cloudrun.ServiceTemplateSpecContainerEnvArgs(name="GCP_PROJECT", value=project),
+                        cloudrun.ServiceTemplateSpecContainerEnvArgs(name="GCP_REGION", value=region),
+                        cloudrun.ServiceTemplateSpecContainerEnvArgs(name="INPUT_BUCKET", value=f"{project}-input"),
+                        cloudrun.ServiceTemplateSpecContainerEnvArgs(name="OUTPUT_BUCKET", value=f"{project}-output"),
+                        cloudrun.ServiceTemplateSpecContainerEnvArgs(name="PUBSUB_TOPIC", value="ocr-jobs"),
+                        cloudrun.ServiceTemplateSpecContainerEnvArgs(
+                            name="ALLOWED_ORIGINS_STR",
+                            value=f"https://{project}.web.app;https://{project}.firebaseapp.com;http://localhost:5173"
+                        ),
+                    ],
+                    resources=cloudrun.ServiceTemplateSpecContainerResourcesArgs(
+                        limits={"memory": "512Mi", "cpu": "1"},
+                    ),
+                )
+            ],
+        ),
+        metadata=cloudrun.ServiceTemplateMetadataArgs(
+            annotations={
+                "autoscaling.knative.dev/minScale": "0",
+                "autoscaling.knative.dev/maxScale": "10",
+            }
+        ),
+    ),
+    traffics=[cloudrun.ServiceTrafficArgs(percent=100, latest_revision=True)],
+    opts=pulumi.ResourceOptions(
+        depends_on=[
+            enabled_apis["run"],
+            enabled_apis["compute"],
+            docker_repo,
+            backend_sa,
+            backend_storage_binding,
+            backend_firestore_binding,
+            backend_pubsub_binding,
+            backend_sa_user_binding,
+        ]
+    ),
+)
+
+# Allow unauthenticated access to backend API
+backend_invoker = cloudrun.IamMember(
+    "backend-invoker",
+    service=backend_service.name,
+    location=region,
+    project=project,
+    role="roles/run.invoker",
+    member="allUsers",
+)
+
 # =============================================================================
 # Exports
 # =============================================================================
@@ -209,3 +314,7 @@ pulumi.export("jobs_topic_id", jobs_topic.id)
 pulumi.export("dlq_topic_name", dlq_topic.name)
 pulumi.export("backend_sa_email", backend_sa.email)
 pulumi.export("worker_sa_email", worker_sa.email)
+pulumi.export("docker_repo_url", docker_repo.name.apply(
+    lambda name: f"{region}-docker.pkg.dev/{project}/{name}"
+))
+pulumi.export("backend_service_url", backend_service.statuses[0].url)
