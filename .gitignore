@@ -1,0 +1,86 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+/lib/
+/lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Build outputs
+frontend/dist/
+*.log
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Firebase
+.firebase/
+firebase-debug.log
+
+# Google Cloud
+*.json
+!firebase.json
+!firestore.indexes.json
+!package.json
+!package-lock.json
+!tsconfig.json
+
+# Secrets (never commit)
+*credentials*.json
+*service-account*.json
+*.pem
+*.key
+
+# Test fixtures (large files)
+tests/fixtures/*.pdf
+tests/fixtures/*.docx
+
+# Temporary files
+tmp/
+temp/
+*.tmp

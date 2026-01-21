@@ -1,0 +1,77 @@
+# OCR Perfect - Default Configuration
+# Balanced settings for general use
+
+preset: default
+
+runtime:
+  max_workers: 4
+  fail_fast: false
+  log_level: info
+
+three_path:
+  render_dpi: 300
+  max_pixels: 100000000
+  detection:
+    text_coverage_threshold: 0.02
+    image_coverage_threshold: 0.3
+    quality_score_threshold: 0.6
+  masking:
+    enabled: true
+    trust_threshold: 0.75
+    expansion_px: 2
+
+preprocessing:
+  deskew:
+    enabled: true
+    method: hough
+    min_angle: 0.5
+    max_angle: 15.0
+  denoise:
+    enabled: true
+    method: nlm
+    strength: 5
+  contrast:
+    enabled: true
+    method: clahe
+    clahe_clip_limit: 2.0
+  binarization:
+    enabled: false
+
+ocr:
+  primary: tesseract
+  fallback: null
+  languages: [eng]
+  min_confidence: 40
+  tesseract:
+    oem: 1
+    psm: 6
+    timeout_s: 60
+
+tables:
+  enabled: true
+  use_vector: true
+  use_raster: true
+  use_img2table: false
+  use_cloud: false
+  min_rows: 2
+  min_cols: 2
+
+layout:
+  reading_order: xy_cut
+  detect_headers: true
+  detect_footers: true
+
+ml:
+  region_classifier_enabled: false
+  use_heuristic_fallback: true
+
+output:
+  formats: [docx, json]
+  searchable_pdf_mode: native
+  docx:
+    preserve_formatting: true
+    default_font: Calibri
+    default_font_size: 11.0
+  json:
+    per_page: true
+    indent: 2

@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ocr-perfect"
+version = "1.0.0"
+description = "Production-ready OCR engine with multi-backend support"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "Luis Albarenga"}
+]
+keywords = ["ocr", "pdf", "document", "tesseract", "document-ai"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Text Processing :: General",
+]
+
+dependencies = [
+    "pydantic>=2.0",
+    "numpy>=1.24",
+    "PyMuPDF>=1.23",
+    "python-docx>=1.0",
+    "pyyaml>=6.0",
+    "opencv-python>=4.8",
+    "pillow>=10.0",
+    "scikit-image>=0.21",
+    "pytesseract>=0.3.10",
+    "scikit-learn>=1.3",
+    "joblib>=1.3",
+    "click>=8.1",
+    "rich>=13.0",
+]
+
+[project.optional-dependencies]
+cloud = [
+    "google-cloud-documentai>=2.20",
+    "google-cloud-vision>=3.5",
+]
+tables = [
+    "img2table>=1.2",
+]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "black>=23.0",
+    "ruff>=0.1",
+]
+all = [
+    "ocr-perfect[cloud,tables,dev]",
+]
+
+[project.scripts]
+ocr-perfect = "ocr_perfect.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/luisalbarenga/ocr-perfect"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I", "W"]
+ignore = ["E501"]

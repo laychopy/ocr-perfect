@@ -1,0 +1,1 @@
+"""OCR Perfect test suite."""

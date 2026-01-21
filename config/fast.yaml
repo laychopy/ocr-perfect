@@ -1,0 +1,32 @@
+# OCR Perfect - Fast Configuration
+# Speed optimized, reduced accuracy
+
+preset: fast
+
+three_path:
+  render_dpi: 200
+
+preprocessing:
+  deskew:
+    enabled: false
+  denoise:
+    enabled: false
+  contrast:
+    enabled: false
+  binarization:
+    enabled: false
+
+ocr:
+  min_confidence: 50
+
+tables:
+  use_raster: false
+  use_img2table: false
+
+layout:
+  reading_order: simple
+  detect_headers: false
+  detect_footers: false
+
+ml:
+  region_classifier_enabled: false

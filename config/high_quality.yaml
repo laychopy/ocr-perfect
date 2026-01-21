@@ -1,0 +1,33 @@
+# OCR Perfect - High Quality Configuration
+# Maximum accuracy, slower processing
+
+preset: high_quality
+
+three_path:
+  render_dpi: 400
+
+preprocessing:
+  deskew:
+    enabled: true
+    method: projection
+    angle_resolution: 0.05
+  denoise:
+    enabled: true
+    strength: 7
+  contrast:
+    enabled: true
+    clahe_clip_limit: 3.0
+  binarization:
+    enabled: true
+    method: sauvola
+    sauvola_window_size: 25
+
+ocr:
+  min_confidence: 20
+
+ml:
+  region_classifier_enabled: true
+  use_heuristic_fallback: true
+
+tables:
+  use_img2table: true

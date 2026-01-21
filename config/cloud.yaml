@@ -1,0 +1,19 @@
+# OCR Perfect - Cloud Configuration
+# Uses Google Document AI for maximum accuracy
+
+preset: cloud
+
+ocr:
+  primary: document_ai
+  fallback: tesseract
+  document_ai:
+    location: us
+    # Set these via environment or override:
+    # project_id: your-project-id
+    # processor_id: your-processor-id
+
+tables:
+  use_cloud: true
+  use_vector: true
+  use_raster: false
+  use_img2table: false
