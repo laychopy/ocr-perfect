@@ -14,13 +14,18 @@
 - [x] Configure GitHub MCP
 - [x] Create GitHub repository and push code
 - [x] **Infrastructure as Code with Pulumi** (tested create/destroy cycle)
+- [x] Enable Google Sign-In in Firebase Console
+- [x] Backend API (FastAPI + Cloud Run) - DEPLOYED
+- [x] Frontend (React + Firebase Hosting) - DEPLOYED
+
+### Deployed URLs
+- **Frontend:** https://ocr-perfect.web.app
+- **Backend API:** https://ocr-perfect-backend-276562330509.us-central1.run.app
+- **API Docs:** https://ocr-perfect-backend-276562330509.us-central1.run.app/docs
 
 ### Pending
-- [ ] Enable Google Sign-In in Firebase Console (manual step)
-- [ ] Set up GitHub Actions for IaC deployment
-- [ ] Implement Backend API (FastAPI + Cloud Run)
+- [ ] Set up GitHub Actions for automated deployment
 - [ ] Implement Background Worker (Cloud Run Jobs)
-- [ ] Implement Frontend (React + Firebase Hosting)
 - [ ] Implement OCR pipeline modules
 
 ---
@@ -33,13 +38,58 @@
 - Configuration system with presets - `src/ocr_perfect/config.py`
 - Unit tests (~1,139 lines across 5 test files)
 
-**Infrastructure completed:**
+**Backend API (COMPLETED):**
+- FastAPI app with CORS middleware
+- Firebase Auth middleware for JWT verification
+- Job management endpoints (upload, list, get, download, delete)
+- Cloud Storage integration (signed URLs)
+- Firestore integration (job CRUD)
+- Pub/Sub integration (job queue)
+- Deployed on Cloud Run
+
+**Frontend App (COMPLETED):**
+- React + Vite + TypeScript + Tailwind CSS
+- Firebase Auth with Google Sign-In
+- Login page with Google button
+- Dashboard with upload and job list
+- Real-time status updates (polling)
+- Deployed on Firebase Hosting
+
+**Infrastructure (COMPLETED):**
 - Google Cloud Project: `ocr-perfect`
 - Firestore database: us-central1
 - Storage buckets: `ocr-perfect-input`, `ocr-perfect-output`
+- Artifact Registry: `ocr-perfect`
+- Cloud Run Service: `ocr-perfect-backend`
 - Firebase Web App configured
-- GitHub MCP connected
 - GitHub repository: https://github.com/laychopy/ocr-perfect
+- All managed by Pulumi IaC
+
+---
+
+## Google Cloud Resources (Managed by Pulumi)
+
+| Resource | ID/Name | Description |
+|----------|---------|-------------|
+| Project | `ocr-perfect` | Main project |
+| Firestore | `(default)` | Jobs database |
+| Storage | `ocr-perfect-input` | Uploaded PDFs |
+| Storage | `ocr-perfect-output` | Processed files |
+| Artifact Registry | `ocr-perfect` | Docker images |
+| Cloud Run | `ocr-perfect-backend` | Backend API |
+| Pub/Sub Topic | `ocr-jobs` | Job queue |
+| Pub/Sub Topic | `ocr-jobs-dlq` | Dead letter queue |
+| Service Account | `ocr-backend` | Backend permissions |
+| Service Account | `ocr-worker` | Worker permissions |
+
+### Pulumi Commands
+```bash
+cd infra
+PULUMI_CONFIG_PASSPHRASE="" pulumi up --yes      # Create/Update
+PULUMI_CONFIG_PASSPHRASE="" pulumi destroy --yes # Destroy
+PULUMI_CONFIG_PASSPHRASE="" pulumi stack output  # View outputs
+PULUMI_CONFIG_PASSPHRASE="" pulumi refresh --yes # Sync state
+```
 
 ---
 
@@ -126,19 +176,8 @@
 
 ---
 
-## TODO - Web Application
+## TODO - Background Worker
 
-### Backend API (FastAPI)
-**Path:** `backend/`
-**Status:** Pending
-
-- FastAPI app with Firebase Auth verification
-- Endpoints: upload, jobs list, job status, download
-- Cloud Storage integration
-- Firestore integration
-- Dockerfile for Cloud Run
-
-### Background Worker
 **Path:** `worker/`
 **Status:** Pending
 
@@ -148,63 +187,33 @@
 - Error handling and retry logic
 - Status updates to Firestore
 
-### Frontend (React)
-**Path:** `frontend/`
-**Status:** Pending
-
-- React + Vite + TypeScript setup
-- Firebase Auth (Google Sign-In)
-- Upload page with drag & drop
-- Dashboard with job list
-- Real-time status updates
-- Download results
-
 ---
-
-## Implementation Order
-
-1. ~~Infrastructure setup~~ (DONE)
-2. Create GitHub repository
-3. Backend API (FastAPI)
-4. Frontend (React)
-5. Background Worker (Cloud Run Jobs)
-6. OCR Pipeline modules
-
----
-
-## Architecture Notes
-
-- All modules use the IR models from `src/ocr_perfect/ir/models.py`
-- Coordinates flow through TransformChain for sub-pixel accuracy
-- Configuration is managed via `AppConfig` with preset support
-- Three coordinate spaces: PDF (72 DPI), RASTER, PREPROCESSED
-
-## Google Cloud Resources (Managed by Pulumi)
-
-| Resource | ID/Name | Location |
-|----------|---------|----------|
-| Project | `ocr-perfect` | - |
-| Firestore | `(default)` | us-central1 |
-| Storage | `ocr-perfect-input` | us-central1 |
-| Storage | `ocr-perfect-output` | us-central1 |
-| Pub/Sub Topic | `ocr-jobs` | - |
-| Pub/Sub Topic | `ocr-jobs-dlq` | - |
-| Service Account | `ocr-backend` | - |
-| Service Account | `ocr-worker` | - |
-| Firebase App | `1:276562330509:web:...` | - |
-
-### Pulumi Commands
-```bash
-cd infra
-PULUMI_CONFIG_PASSPHRASE="" pulumi up --yes      # Create
-PULUMI_CONFIG_PASSPHRASE="" pulumi destroy --yes # Destroy
-PULUMI_CONFIG_PASSPHRASE="" pulumi stack output  # View outputs
-```
 
 ## Documentation
 
 - `docs/GOOGLE_CLOUD_SETUP.md` - GCP & Firebase setup steps
 - `docs/MCP_SETUP.md` - MCP server configuration
 - `docs/GITHUB_SETUP.md` - GitHub repository setup
-- `docs/INFRASTRUCTURE_AS_CODE.md` - Pulumi IaC plan with GitHub Actions
-- `PLAN.md` - Full stack architecture plan
+- `docs/INFRASTRUCTURE_AS_CODE.md` - Pulumi IaC with tested workflows
+- `docs/BACKEND_FRONTEND_PLAN.md` - Full stack architecture plan
+- `docs/FIREBASE_AUTH_SETUP.md` - Google Sign-In configuration
+- `docs/DEPLOYMENT.md` - Deployment guide and troubleshooting
+- `PLAN.md` - Original architecture plan
+
+---
+
+## Quick Deployment Commands
+
+```bash
+# Full infrastructure
+cd infra && PULUMI_CONFIG_PASSPHRASE="" pulumi up --yes
+
+# Backend
+cd backend && gcloud builds submit --tag us-central1-docker.pkg.dev/ocr-perfect/ocr-perfect/backend:v3 .
+
+# Frontend
+cd frontend && npm run build && cd .. && firebase deploy --only hosting
+
+# Check backend
+curl https://ocr-perfect-backend-276562330509.us-central1.run.app/
+```
