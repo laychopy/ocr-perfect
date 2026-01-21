@@ -1,0 +1,19 @@
+# FastAPI and server
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+python-multipart>=0.0.6
+
+# Firebase Admin SDK
+firebase-admin>=6.4.0
+
+# Google Cloud SDKs
+google-cloud-storage>=2.14.0
+google-cloud-firestore>=2.14.0
+google-cloud-pubsub>=2.19.0
+
+# Pydantic
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# Utils
+python-dotenv>=1.0.0
