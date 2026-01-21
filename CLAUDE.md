@@ -12,10 +12,12 @@
 - [x] Create Cloud Storage buckets (input/output)
 - [x] Create Firebase Web App
 - [x] Configure GitHub MCP
+- [x] Create GitHub repository and push code
+- [x] **Infrastructure as Code with Pulumi** (tested create/destroy cycle)
 
 ### Pending
 - [ ] Enable Google Sign-In in Firebase Console (manual step)
-- [ ] Create GitHub repository and push code
+- [ ] Set up GitHub Actions for IaC deployment
 - [ ] Implement Backend API (FastAPI + Cloud Run)
 - [ ] Implement Background Worker (Cloud Run Jobs)
 - [ ] Implement Frontend (React + Firebase Hosting)
@@ -37,6 +39,7 @@
 - Storage buckets: `ocr-perfect-input`, `ocr-perfect-output`
 - Firebase Web App configured
 - GitHub MCP connected
+- GitHub repository: https://github.com/laychopy/ocr-perfect
 
 ---
 
@@ -176,7 +179,7 @@
 - Configuration is managed via `AppConfig` with preset support
 - Three coordinate spaces: PDF (72 DPI), RASTER, PREPROCESSED
 
-## Google Cloud Resources
+## Google Cloud Resources (Managed by Pulumi)
 
 | Resource | ID/Name | Location |
 |----------|---------|----------|
@@ -184,10 +187,24 @@
 | Firestore | `(default)` | us-central1 |
 | Storage | `ocr-perfect-input` | us-central1 |
 | Storage | `ocr-perfect-output` | us-central1 |
+| Pub/Sub Topic | `ocr-jobs` | - |
+| Pub/Sub Topic | `ocr-jobs-dlq` | - |
+| Service Account | `ocr-backend` | - |
+| Service Account | `ocr-worker` | - |
 | Firebase App | `1:276562330509:web:...` | - |
+
+### Pulumi Commands
+```bash
+cd infra
+PULUMI_CONFIG_PASSPHRASE="" pulumi up --yes      # Create
+PULUMI_CONFIG_PASSPHRASE="" pulumi destroy --yes # Destroy
+PULUMI_CONFIG_PASSPHRASE="" pulumi stack output  # View outputs
+```
 
 ## Documentation
 
 - `docs/GOOGLE_CLOUD_SETUP.md` - GCP & Firebase setup steps
 - `docs/MCP_SETUP.md` - MCP server configuration
+- `docs/GITHUB_SETUP.md` - GitHub repository setup
+- `docs/INFRASTRUCTURE_AS_CODE.md` - Pulumi IaC plan with GitHub Actions
 - `PLAN.md` - Full stack architecture plan

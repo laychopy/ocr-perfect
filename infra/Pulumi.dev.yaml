@@ -1,0 +1,4 @@
+encryptionsalt: v1:czyOp7qh+Qg=:v1:rC8ud6bCjjpZT3mu:/RHf12qg8J7UiFF/Me5w8ywdzyekbw==
+config:
+  gcp:project: ocr-perfect
+  gcp:region: us-central1
